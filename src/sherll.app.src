@@ -1,0 +1,12 @@
+{application, sherll,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { sherll_app, []}},
+  {env, []}
+ ]}.
