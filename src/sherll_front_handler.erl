@@ -9,7 +9,6 @@ init(_Type, Req, _Opts) ->
 	{ok, Req, undefined_state}.
 
 handle(Req, State) ->
-	io:format("~nRequest:~p ~n", [Req]),
 	{ok, Rep} = cowboy_req:reply(200, [
 		{<<"content-type">>, <<"text/plain">>}
 	], <<"Front handler!">>, Req),

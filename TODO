@@ -1,7 +1,15 @@
 TODO:
+- evaluate received text from websocket by:
+	- Binding = erl_eval:new_bindings()
+	- {ok, Tokens, _} = erl_scan:string(String, 0)
+	- {ok, Exprs} = erl_parse:parse_expr(Tokens)
+	- {value, Val, NewBinding} = erl_eval:exprs(Exprs, Binding)
+- sanitize received text from websocket
+
+DONE:
+- ignore unnecessary files
 - add main module
 - add start function in main module
 - start deps app in main module
 
-DONE:
-- ignore unnecessary files
+

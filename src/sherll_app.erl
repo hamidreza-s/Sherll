@@ -10,23 +10,19 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-		application:start(crypto),
-		application:start(ranch),
-		application:start(cowlib),
-		application:start(cowboy),
 		Dispatch = cowboy_router:compile([
 			%% {URIHost, [{URIPath, Handler, Opts}]}
 			%% '_' is wildcard, means all URLs 
 			%% maps to this handler
 			{'_', 
 				[
-					{"/front", sherll_front_handler, []},
-					{"/about", sherll_about_handler, []}
+					{"/", sherll_front_handler, []},
+					{"/ws", sherll_ws_handler, []}
 				]
 			}
 		]),
 		%% Name, NumOFAcceptors, TransOpts, ProtoOpts
-		cowboy:start_http(sherll_http_listener, 100,
+		cowboy:start_http(sherll_listener, 100,
 			[{port, 8080}],
 			[{env, [{dispatch, Dispatch}]}]
 		),
