@@ -1,8 +1,8 @@
 {application, sherll,
  [
-  {description, ""},
+  {description, "Erlang Shell"},
   {vsn, "1"},
-  {registered, []},
+  {registered, [sherll_sup]},
   {applications, [
                   kernel,
                   stdlib,

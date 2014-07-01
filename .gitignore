@@ -2,4 +2,5 @@ ebin
 deps
 log
 *.beam
+*.swp
 erl_crash.dump

@@ -1,9 +1,9 @@
 -module(sherll).
 
--export([start/1]).
+-export([start/0]).
 -export([stop/0]).
 
-start(_Opts) ->
+start() ->
 	ensure_deps_started(),
 	ensure_started(sherll),
 	io:format("Server started at 8080~n").
