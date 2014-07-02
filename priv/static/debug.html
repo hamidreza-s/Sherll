@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+</head>
+<body>
+   <div class="container">
+      <div class="page-header">
+         <h1>Debug Panel</h1>
+         <p class="lead">
+            Here you can connect to the websocket or whatnots and fiddling with it.
+         </p>
+      </div>
+
+      <div class="row">
+         <div class="col-md-6">
+            
+            <form role="form" id="data-form">
+              <div class="form-group">
+                  <label for="data-input">Data input</label>
+                  <textarea name="data-input" class="form-control" 
+                     id="data-input" rows="3"></textarea>
+               </div>
+               <button type="button" class="btn btn-default" id="send" disabled>Send</button>
+               <button type="button" class="btn btn-primary" id="connect">Connect</button>
+               <button type="button" class="btn btn-danger" id="disconnect" disabled>Disconnect</button>
+            </form>
+        
+            <br/>
+
+            <form role="form" id="result-form">
+               <div class="form-group">
+                  <label for="data-result">Date result</label>
+                  <pre name="data-result" id="data-result" style="height: 200px"></pre>
+               </div>
+               <button type="button" class="btn btn-default" id="clear">Clear</button>
+            </form>
+
+         </div>
+         <div class="col-md-6">
+
+         </div>
+      </div>
+   </div>
+   <script type="text/javascript">
+      
+      // initialize ==============================
+      var $body = $('body');
+      var $dataResult = $('#data-result');
+      var $dataInput = $('#data-input');
+      var $send = $('#send');
+      var $connect = $('#connect');
+      var $disconnect = $('#disconnect');
+      var $clear = $('#clear');
+      var wsPath = 'ws://127.0.0.1:8080/ws';
+      var wsObj = {};
+
+      // handlers ==============================
+      $connect.on('click', function(){
+         log("connecting ...");
+         
+         wsObj = new WebSocket(wsPath);
+         
+         wsObj.onopen = function(){
+            
+            $send.prop('disabled', false);
+            $connect.prop('disabled', true);
+            $disconnect.prop('disabled', false);
+            log("connected!");
+
+         }
+         
+         wsObj.onclose = function(){
+
+            $send.prop('disabled', true);
+            $connect.prop('disabled', false);
+            $disconnect.prop('disabled', true);
+            log("closed!");
+
+         }
+
+         wsObj.onmessage = function(payload){ 
+            log(payload.data); 
+            console.log(payload);
+         };
+
+      });
+      
+      $send.on('click', function(){
+         if(wsObj.readyState !== 1){
+            log("connection is disconnected!");
+         }else{
+            log("sending ...");
+            wsObj.send($dataInput.val());
+         }
+      });
+
+      $disconnect.on('click', function(){
+         log("disconnection ...");
+         wsObj.close();
+      });
+
+      $clear.on('click', function(){
+         $dataResult.html('');
+      });
+
+      // helpers ==============================
+      function log(string){
+         $dataResult.append(string + "\n");
+      }
+   </script>
+</body>
+</html>
