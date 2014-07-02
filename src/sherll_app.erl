@@ -17,11 +17,11 @@ start(_StartType, _StartArgs) ->
 			{'_', 
 				[
                {"/", cowboy_static, {priv_file, sherll, "static/index.html"}},
-               {"/assets/[...]", cowboy_static, {
-                  priv_dir, sherll, "static/assets", [{mimetypes, cow_mimetypes, all}]
-               }},
 					{"/front", sherll_front_handler, []},
-					{"/ws", sherll_ws_handler, []}
+					{"/ws", sherll_ws_handler, []},
+               {"/[...]", cowboy_static, {
+                  priv_dir, sherll, "static", [{mimetypes, cow_mimetypes, all}]
+               }}
 				]
 			}
 		]),
