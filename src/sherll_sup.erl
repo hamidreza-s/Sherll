@@ -1,6 +1,4 @@
-
 -module(sherll_sup).
-
 -behaviour(supervisor).
 
 %% API
@@ -17,12 +15,15 @@
 %% ===================================================================
 
 start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+   supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
+   Children = [
+      ?CHILD(sherll_ws_dispatcher, worker)
+   ],
+   {ok, { {one_for_one, 5, 10}, Children} }.
 
