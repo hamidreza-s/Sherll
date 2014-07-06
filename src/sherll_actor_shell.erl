@@ -28,8 +28,16 @@ init([]) ->
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
-handle_cast({do, Msg, WsPid}, State) ->
-   io:format("Do ===> ~nMsg: ~p~nWsPid: ~p~n", [Msg, WsPid]),
+handle_cast({do, Msg, WebSocketPid}, State) ->
+   io:format("Do ===> ~nMsg: ~p~nWsPid: ~p~n", [Msg, WebSocketPid]),
+   Response = <<"you said ", Msg/binary>>,
+   
+   %% figure out why following line doesn't work =>
+   %% gen_server:call(WebSocketPid, {outbound_frame, Response}),
+   
+   %% temporary alternative way =>
+   WebSocketPid ! {outbound_frame, Response},
+
    {noreply, State};
 handle_cast(_Msg, State) ->
    {noreply, State}.

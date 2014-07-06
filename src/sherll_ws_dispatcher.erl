@@ -17,13 +17,18 @@ start_link() ->
 init([]) ->
    {ok, undefined}.
 
-handle_call({inbound_frame, Msg}, From, State) ->
-   WsPid = From,
+handle_call({inbound_frame, Msg}, Req, State) ->
+   {WebSocketPid, Reference} = Req,
    %% find recipient actor
    Actor = hd(ets:lookup(actor_list, shell)),
    %% pass Msg and From to recipient actor
-   gen_server:cast(Actor#actor_list.module, {do, Msg, WsPid}),
+   gen_server:cast(
+      Actor#actor_list.module, 
+      {do, Msg, WebSocketPid}
+   ),
    {reply, ok, State};
+handle_call({outbound_frame, Msg}, Req, State) ->
+   {reply, {text, Msg}, Req, State};
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
