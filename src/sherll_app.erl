@@ -30,7 +30,7 @@ start(_StartType, _StartArgs) ->
 			[{port, 8080}],
 			[{env, [{dispatch, Dispatch}]}]
 		),
-    sherll_sup:start_link().
+   sherll_sup:start_link().
 
 stop(_State) ->
-    ok.
+   ok.

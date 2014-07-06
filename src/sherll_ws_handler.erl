@@ -18,6 +18,8 @@ websocket_handle({text, Msg}, Req, State) ->
 websocket_handle(_Any, Req, State) ->
 	{ok, Req, State}.
 
+websocket_info({reply, Msg}, Req, State) ->
+   {reply, {text, Msg}, Req, State};
 websocket_info(_Info, Req, State) ->
 	{ok, Req, State}.
 

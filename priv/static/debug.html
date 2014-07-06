@@ -46,21 +46,21 @@
    <script type="text/javascript">
       
       // initialize ==============================
-      $body = $('body');
-      $dataResult = $('#data-result');
-      $dataInput = $('#data-input');
-      $send = $('#send');
-      $connect = $('#connect');
-      $disconnect = $('#disconnect');
-      $clear = $('#clear');
-      wsPath = 'ws://127.0.0.1:8080/ws';
-      wsObj = {};
+      var $body = $('body');
+      var $dataResult = $('#data-result');
+      var $dataInput = $('#data-input');
+      var $send = $('#send');
+      var $connect = $('#connect');
+      var $disconnect = $('#disconnect');
+      var $clear = $('#clear');
+      var wsPath = 'ws://127.0.0.1:8080/ws';
+      var wsObj = {};
 
       // handlers ==============================
       $connect.on('click', function(){
          log("connecting ...");
          
-         var wsObj = new WebSocket(wsPath);
+         wsObj = new WebSocket(wsPath);
          
          wsObj.onopen = function(){
             
@@ -68,14 +68,6 @@
             $connect.prop('disabled', true);
             $disconnect.prop('disabled', false);
             log("connected!");
-            $send.on('click', function(){
-               if(wsObj.readyState !== 1){
-                  log("connection is disconnected!");
-               }else{
-                  log("sending ...");
-                  wsObj.send($dataInput.val());
-               }
-            });
 
          }
          
@@ -92,12 +84,21 @@
             log(payload.data); 
             console.log(payload);
          };
-       
-         $disconnect.on('click', function(){
-            log("disconnection ...");
-            wsObj.close();
-         });
 
+      });
+      
+      $send.on('click', function(){
+         if(wsObj.readyState !== 1){
+            log("connection is disconnected!");
+         }else{
+            log("sending ...");
+            wsObj.send($dataInput.val());
+         }
+      });
+
+      $disconnect.on('click', function(){
+         log("disconnection ...");
+         wsObj.close();
       });
 
       $clear.on('click', function(){
