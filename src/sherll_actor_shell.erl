@@ -1,4 +1,4 @@
--module(sherll_ws_dispatcher).
+-module(sherll_actor_shell).
 -behaviour(gen_server).
 
 -include("../include/records.hrl").
@@ -15,18 +15,22 @@ start_link() ->
    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
+   %% register in actor list table
+   This = #actor_list{
+      name = shell,
+      module = sherll_actor_shell,
+      command = "shell:parse",
+      arguments = {content, string}
+   },
+   ets:insert(actor_list, This),
    {ok, undefined}.
 
-handle_call({inbound_frame, Msg}, From, State) ->
-   WsPid = From,
-   %% find recipient actor
-   Actor = hd(ets:lookup(actor_list, shell)),
-   %% pass Msg and From to recipient actor
-   gen_server:cast(Actor#actor_list.module, {do, Msg, WsPid}),
-   {reply, ok, State};
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
+handle_cast({do, Msg, WsPid}, State) ->
+   io:format("Do ===> ~nMsg: ~p~nWsPid: ~p~n", [Msg, WsPid]),
+   {noreply, State};
 handle_cast(_Msg, State) ->
    {noreply, State}.
 

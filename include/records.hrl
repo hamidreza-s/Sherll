@@ -1,0 +1,1 @@
+-record(actor_list, {name, module, command, arguments}).

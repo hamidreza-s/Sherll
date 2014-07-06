@@ -14,11 +14,13 @@ websocket_init(_TransportName, Req, _Opts) ->
 	{ok, Req, undefined}.
 
 websocket_handle({text, Msg}, Req, State) ->
-	{reply, {text, <<"You said: ", Msg/binary>>}, Req, State};
+   %% pass to ws dispatcher
+   gen_server:call(sherll_ws_dispatcher, {inbound_frame, Msg}),
+   {ok, Req, State};
 websocket_handle(_Any, Req, State) ->
 	{ok, Req, State}.
 
-websocket_info({reply, Msg}, Req, State) ->
+websocket_info({outbound_frame, Msg}, Req, State) ->
    {reply, {text, Msg}, Req, State};
 websocket_info(_Info, Req, State) ->
 	{ok, Req, State}.
