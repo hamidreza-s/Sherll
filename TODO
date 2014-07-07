@@ -2,7 +2,7 @@ TODO:
 - evaluate received text from websocket by:
 	- Binding = erl_eval:new_bindings()
 	- {ok, Tokens, _} = erl_scan:string(String, 0)
-	- {ok, Exprs} = erl_parse:parse_expr(Tokens)
+	- {ok, Exprs} = erl_parse:parse_exprs(Tokens)
 	- {value, Val, NewBinding} = erl_eval:exprs(Exprs, Binding)
 - sanitize received text from websocket
 

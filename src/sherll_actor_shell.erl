@@ -20,19 +20,37 @@ init([]) ->
       name = shell,
       module = sherll_actor_shell,
       command = <<"shell:parse">>,
-      arguments = {content, string}
+      arguments = "2 + 2 ."
    },
    ets:insert(actor_list, This),
-   {ok, undefined}.
+   Binding = erl_eval:new_bindings(),
+   {ok, Binding}.
 
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
 handle_cast({do, TupleMsg, WebSocketPid}, State) ->
-   io:format("Do ===> ~nMsg: ~p~nWsPid: ~p~n", [TupleMsg, WebSocketPid]),
-   Response = <<"you said ">>,
+
+   %% @todo: check if TupleMsg has arguments
+
+   Binding = State,
+   Key = <<"arguments">>,
+   {Key, ArgumentsBin} = lists:keyfind(Key, 1, TupleMsg),
+   ArgumentsStr = binary_to_list(ArgumentsBin),
+   io:format("arguments: ~p~n", [ArgumentsStr]),
+   {ok, Tokens, _} = erl_scan:string(ArgumentsStr, 0),
+   {ok, Exprs} = erl_parse:parse_exprs(Tokens),
+   {value, Result, NewBinding} = erl_eval:exprs(Exprs, Binding),
+   Response = lists:flatten(io_lib:format("~p", [Result])),
+
+   %% @todo: also send shell io to WebSocket
+
+   io:format("request: ~p~n", [TupleMsg]),
+   io:format("result: ~p~n", [Result]),
+   io:format("response: ~p~n", [Response]),
+
    WebSocketPid ! {outbound_frame, Response},
-   {noreply, State};
+   {noreply, NewBinding};
 handle_cast(_Msg, State) ->
    {noreply, State}.
 
