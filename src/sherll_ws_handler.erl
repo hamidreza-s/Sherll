@@ -15,7 +15,9 @@ websocket_init(_TransportName, Req, _Opts) ->
 
 websocket_handle({text, Msg}, Req, State) ->
    %% pass to ws dispatcher
-   gen_server:call(sherll_ws_dispatcher, {inbound_frame, Msg}),
+   gen_server:cast(sherll_ws_dispatcher, 
+      {inbound_frame, self(), Msg}
+   ),
    {ok, Req, State};
 websocket_handle(_Any, Req, State) ->
 	{ok, Req, State}.

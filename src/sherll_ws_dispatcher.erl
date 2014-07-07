@@ -17,21 +17,42 @@ start_link() ->
 init([]) ->
    {ok, undefined}.
 
-handle_call({inbound_frame, Msg}, Req, State) ->
-   {WebSocketPid, Reference} = Req,
-   %% find recipient actor
-   Actor = hd(ets:lookup(actor_list, shell)),
-   %% pass Msg and From to recipient actor
-   gen_server:cast(
-      Actor#actor_list.module, 
-      {do, Msg, WebSocketPid}
-   ),
-   {reply, ok, State};
-handle_call({outbound_frame, Msg}, Req, State) ->
-   {reply, {text, Msg}, Req, State};
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
+handle_cast({inbound_frame, WsPid, Msg}, State) ->
+   MalformedRes = <<"[error: malformed json request]">>,
+   UnknownCommand = <<"[error: unknown command]">>,
+   %% check if Msg is json
+   case jsx:is_json(Msg) of
+      false -> 
+         WsPid ! {outbound_frame, MalformedRes};
+      true ->
+         %% find recipient actor
+         TupleMsg = jsx:decode(Msg),
+         Key = <<"command">>,
+         ActorCommand = lists:keyfind(Key, 1, TupleMsg),
+         case ActorCommand of
+            false -> 
+               WsPid ! {outbound_frame, MalformedRes};
+            {Key, Command} ->
+               ActorRecord = ets:lookup(actor_list, Command),
+               case length(ActorRecord) > 0 of
+                  false ->
+                     WsPid ! {outbound_frame, UnknownCommand};
+                  true ->
+                     Record = hd(ActorRecord),
+                     %% pass Msg and From to recipient actor
+                     gen_server:cast(
+                        Record#actor_list.module, 
+                        {do, TupleMsg, WsPid}
+                     ) 
+               end;
+            _ ->
+               WsPid ! {outbound_frame, MalformedRes}
+         end
+   end,
+   {noreply, State};
 handle_cast(_Msg, State) ->
    {noreply, State}.
 

@@ -17,7 +17,7 @@ start(_StartType, _StartArgs) ->
       set, 
       public, 
       named_table, 
-      {keypos, #actor_list.name}
+      {keypos, #actor_list.command}
    ]),
 
    Dispatch = cowboy_router:compile([

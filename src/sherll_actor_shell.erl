@@ -19,7 +19,7 @@ init([]) ->
    This = #actor_list{
       name = shell,
       module = sherll_actor_shell,
-      command = "shell:parse",
+      command = <<"shell:parse">>,
       arguments = {content, string}
    },
    ets:insert(actor_list, This),
@@ -28,16 +28,10 @@ init([]) ->
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
-handle_cast({do, Msg, WebSocketPid}, State) ->
-   io:format("Do ===> ~nMsg: ~p~nWsPid: ~p~n", [Msg, WebSocketPid]),
-   Response = <<"you said ", Msg/binary>>,
-   
-   %% figure out why following line doesn't work =>
-   %% gen_server:call(WebSocketPid, {outbound_frame, Response}),
-   
-   %% temporary alternative way =>
+handle_cast({do, TupleMsg, WebSocketPid}, State) ->
+   io:format("Do ===> ~nMsg: ~p~nWsPid: ~p~n", [TupleMsg, WebSocketPid]),
+   Response = <<"you said ">>,
    WebSocketPid ! {outbound_frame, Response},
-
    {noreply, State};
 handle_cast(_Msg, State) ->
    {noreply, State}.
