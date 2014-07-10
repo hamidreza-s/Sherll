@@ -46,16 +46,28 @@ handle_cast({do, TupleMsg, WebSocketPid}, State) ->
    ArgumentsStr = binary_to_list(ArgumentsBin),
    {ok, Tokens, _} = erl_scan:string(ArgumentsStr, 0),
 
-      {ResponseF, NewBindingF} = case erl_parse:parse_exprs(Tokens) of
+   %% handle logic error
+   {ResponseF, NewBindingF} = try
+      
+      %% handle syntax error
+      case erl_parse:parse_exprs(Tokens) of
          {ok, Exprs} ->
             {value, Result, NewBinding} = erl_eval:exprs(Exprs, Binding),
             Response = term_to_list(Result),
             {Response, NewBinding};
          {error, ErrInfo} ->
-            Response = term_to_list(ErrInfo),
+            {_Line, _Module, Description} = ErrInfo,
+            Response = format_err_description(Description),
             NewBinding = Binding,
             {Response, NewBinding}
-      end,
+      end
+
+   catch
+
+      Type:Exception ->
+         {term_to_list({Type, Exception}), Binding}
+
+   end,
 
    WebSocketPid ! {outbound_frame, ResponseF},
    {noreply, NewBindingF};
@@ -73,3 +85,6 @@ code_change(_OldVsn, State, _Extra) ->
 
 term_to_list(Term) ->
    lists:flatten(io_lib:format("~p", [Term])).
+
+format_err_description([String, Argument]) ->
+   lists:flatten(io_lib:format("~s~s", [String, Argument])).
