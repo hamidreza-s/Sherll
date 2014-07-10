@@ -32,25 +32,33 @@ handle_call(_Msg, _From, State) ->
 handle_cast({do, TupleMsg, WebSocketPid}, State) ->
 
    %% @todo: check if TupleMsg has arguments
+   %% @todo: also send shell io to WebSocket
+   %% @todo: make an env to hold app's root path
+
+   %SelfRef = lists:subtract(pid_to_list(self()), "<..>"),
+   %{ok, IoDevice} = file:open("./tmp/" ++ SelfRef, [write]),
+   %group_leader(IoDevice, self()),
+   %io:format(IoDevice, Response, []),
 
    Binding = State,
    Key = <<"arguments">>,
    {Key, ArgumentsBin} = lists:keyfind(Key, 1, TupleMsg),
    ArgumentsStr = binary_to_list(ArgumentsBin),
-   io:format("arguments: ~p~n", [ArgumentsStr]),
    {ok, Tokens, _} = erl_scan:string(ArgumentsStr, 0),
-   {ok, Exprs} = erl_parse:parse_exprs(Tokens),
-   {value, Result, NewBinding} = erl_eval:exprs(Exprs, Binding),
-   Response = lists:flatten(io_lib:format("~p", [Result])),
 
-   %% @todo: also send shell io to WebSocket
+      {ResponseF, NewBindingF} = case erl_parse:parse_exprs(Tokens) of
+         {ok, Exprs} ->
+            {value, Result, NewBinding} = erl_eval:exprs(Exprs, Binding),
+            Response = term_to_list(Result),
+            {Response, NewBinding};
+         {error, ErrInfo} ->
+            Response = term_to_list(ErrInfo),
+            NewBinding = Binding,
+            {Response, NewBinding}
+      end,
 
-   io:format("request: ~p~n", [TupleMsg]),
-   io:format("result: ~p~n", [Result]),
-   io:format("response: ~p~n", [Response]),
-
-   WebSocketPid ! {outbound_frame, Response},
-   {noreply, NewBinding};
+   WebSocketPid ! {outbound_frame, ResponseF},
+   {noreply, NewBindingF};
 handle_cast(_Msg, State) ->
    {noreply, State}.
 
@@ -62,3 +70,6 @@ terminate(_Reason, _State) ->
 
 code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
+
+term_to_list(Term) ->
+   lists:flatten(io_lib:format("~p", [Term])).
