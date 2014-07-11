@@ -23,6 +23,7 @@ handle_call(_Msg, _From, State) ->
 handle_cast({inbound_frame, WsPid, Msg}, State) ->
    MalformedRes = <<"[error: malformed json request]">>,
    UnknownCommand = <<"[error: unknown command]">>,
+   
    %% check if Msg is json
    case jsx:is_json(Msg) of
       false -> 

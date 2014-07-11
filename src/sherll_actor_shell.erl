@@ -29,16 +29,16 @@ init([]) ->
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
+handle_cast({io_reply, _ReplyAs, _Reply}, State) ->
+   {noreply, State};
 handle_cast({do, TupleMsg, WebSocketPid}, State) ->
 
    %% @todo: check if TupleMsg has arguments
-   %% @todo: also send shell io to WebSocket
+   %% @todo: also send shell io to WebSocket [done]
    %% @todo: make an env to hold app's root path
+   %% @todo: store State in ets when gen_server terminates
 
-   %SelfRef = lists:subtract(pid_to_list(self()), "<..>"),
-   %{ok, IoDevice} = file:open("./tmp/" ++ SelfRef, [write]),
-   %group_leader(IoDevice, self()),
-   %io:format(IoDevice, Response, []),
+   group_leader(whereis(sherll_actor_shell_io), self()),
 
    Binding = State,
    Key = <<"arguments">>,

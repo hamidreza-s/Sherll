@@ -8,6 +8,11 @@
 -export([websocket_terminate/3]).
 
 init({tcp, http}, _Req, _Opts) ->
+   %% registering
+   case whereis(web_socket_pid) of
+      undefined -> register(web_socket_pid, self());
+      _Else -> ok
+   end,
 	{upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_TransportName, Req, _Opts) ->
