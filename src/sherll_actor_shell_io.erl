@@ -24,7 +24,7 @@ handle_cast(_Msg, State) ->
 
 handle_info({io_request, From, ReplyAs, Request}, State) ->
 
-   {put_chars, Encoding, Module, Function, Args} = Request,
+   {put_chars, _Encoding, Module, Function, Args} = Request,
    
    %% @todo: how to get WebSocketPid? [done]
    %%        with registering it
@@ -34,7 +34,7 @@ handle_info({io_request, From, ReplyAs, Request}, State) ->
 
    %% @todo: parse io operation [done]
    Response = apply(Module, Function, Args),
-   web_socket_pid ! {outbound_frame, Response},
+   sherll_ws_handler ! {outbound_frame, Response},
    From ! {io_reply, ReplyAs, ok},
 
    {noreply, State};

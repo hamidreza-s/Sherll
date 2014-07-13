@@ -8,11 +8,7 @@
 -export([websocket_terminate/3]).
 
 init({tcp, http}, _Req, _Opts) ->
-   %% registering
-   case whereis(web_socket_pid) of
-      undefined -> register(web_socket_pid, self());
-      _Else -> ok
-   end,
+   sherll_helper:process_register(sherll_ws_handler, self()),
 	{upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_TransportName, Req, _Opts) ->

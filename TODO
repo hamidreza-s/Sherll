@@ -1,15 +1,17 @@
 TODO:
-- evaluate received text from websocket by:
-	- Binding = erl_eval:new_bindings()
-	- {ok, Tokens, _} = erl_scan:string(String, 0)
-	- {ok, Exprs} = erl_parse:parse_exprs(Tokens)
-	- {value, Val, NewBinding} = erl_eval:exprs(Exprs, Binding)
-- sanitize received text from websocket
+- add sherll_actor_shell_ac (auto-complete)
+- format outbound_frame according to protocol
 
 DONE:
 - ignore unnecessary files
 - add main module
 - add start function in main module
 - start deps app in main module
+- evaluate received text from websocket by:
+	- Binding = erl_eval:new_bindings()
+	- {ok, Tokens, _} = erl_scan:string(String, 0)
+	- {ok, Exprs} = erl_parse:parse_exprs(Tokens)
+	- {value, Val, NewBinding} = erl_eval:exprs(Exprs, Binding)
+- sanitize received text from websocket
 
 
