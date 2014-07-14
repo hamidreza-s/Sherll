@@ -23,31 +23,85 @@ init([]) ->
       arguments = "2 + 2 ."
    },
    ets:insert(actor_list, This),
-   Binding = erl_eval:new_bindings(),
-   {ok, Binding}.
+   %% State structure:
+   %% [{sessions, [{WsPid, SessionPid, Binding}]}]
+   State = [{sessions,[]}],
+   {ok, State}.
 
+handle_call({state_change, {WsPid, SesPid, SesBnd}}, _From, State) ->
+   NewState = update_state(WsPid, SesPid, SesBnd, State),
+   {reply, ok, NewState};
 handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
-handle_cast({io_reply, _ReplyAs, _Reply}, State) ->
-   {noreply, State};
-handle_cast({do, TupleMsg, WebSocketPid}, State) ->
+handle_cast({do, TupleMsg, WsPid}, State) ->
+   [{sessions, Sessions}] = State,
+   Result = case lists:keyfind(WsPid, 1, Sessions) of
+      {OldWsPid, OldSesPid, OldSesBnd} ->
+         {OldWsPid, OldSesPid, OldSesBnd};
+      false -> 
+         session_create(WsPid)
+   end,
 
-   %% @todo: check if TupleMsg has arguments
-   %% @todo: also send shell io to WebSocket [done]
-   %% @todo: make an env to hold app's root path
-   %% @todo: store State in ets when gen_server terminates
+   {WsPid, SesPid, SesBnd} = Result,
+   SesPid ! {self(), WsPid, SesBnd, TupleMsg},
 
-   group_leader(whereis(sherll_actor_shell_io), self()),
+   NewState = update_state(WsPid, SesPid, SesBnd, State),
+   
+   {noreply, NewState};
+handle_cast(_Msg, State) ->
+   {noreply, State}.
 
-   Binding = State,
+handle_info(_Msg, State) ->
+   {noreply, State}.
+
+terminate(_Reason, _State) ->
+   ok.
+
+code_change(_OldVsn, State, _Extra) ->
+   {ok, State}.
+
+%% =================
+%% === internals ===
+%% =================
+
+session_create(WsPid) ->
+   SesIO = spawn(fun() -> session_io() end),
+   SesPid = spawn(fun() -> session_loop(WsPid, SesIO) end),
+   SesBnd = erl_eval:new_bindings(),
+   {WsPid, SesPid, SesBnd}.
+
+session_io() ->
+   receive
+      {io_request, From, ReplyAs, Request} ->
+         {put_chars, _Encoding, Module, Function, Args} = Request,
+         Response = apply(Module, Function, Args),
+         From ! {io_reply, ReplyAs, Response}
+   end,
+   session_io().
+
+session_loop(WsPid, SesIO) ->
+   %% @todo: terminate when wsPid closes
+   %% @todo: store gen_server's state in ets
+   group_leader(SesIO, self()),
+   receive
+      {ShellPid, WsPid, SesBnd, TupleMsg} ->
+         {Res, NewSesBnd} = session_eval(SesBnd, TupleMsg),
+         MsgPack = {WsPid, self(), NewSesBnd},
+         ok = gen_server:call(ShellPid, {state_change, MsgPack}),
+         WsPid ! {outbound_frame, Res}
+   end,
+   session_loop(WsPid, SesIO).
+
+session_eval(SesBnd, TupleMsg) ->
+   Binding = SesBnd,
    Key = <<"arguments">>,
    {Key, ArgumentsBin} = lists:keyfind(Key, 1, TupleMsg),
    ArgumentsStr = binary_to_list(ArgumentsBin),
    {ok, Tokens, _} = erl_scan:string(ArgumentsStr, 0),
 
    %% handle logic error
-   {ResponseF, NewBindingF} = try
+   {ResponseFinal, NewBindingFinal} = try
       
       %% handle syntax error
       case erl_parse:parse_exprs(Tokens) of
@@ -68,20 +122,14 @@ handle_cast({do, TupleMsg, WebSocketPid}, State) ->
          {term_to_list({Type, Exception}), Binding}
 
    end,
+   {ResponseFinal, NewBindingFinal}. 
 
-   WebSocketPid ! {outbound_frame, ResponseF},
-   {noreply, NewBindingF};
-handle_cast(_Msg, State) ->
-   {noreply, State}.
-
-handle_info(_Msg, State) ->
-   {noreply, State}.
-
-terminate(_Reason, _State) ->
-   ok.
-
-code_change(_OldVsn, State, _Extra) ->
-   {ok, State}.
+update_state(WsPid, SesPid, SesBnd, State) ->
+   [{sessions, Sessions}] = State,
+   ChangedData = {WsPid, SesPid, SesBnd},
+   NewSessions = lists:keystore(WsPid, 1, Sessions, ChangedData),
+   NewState = lists:keystore(sessions, 1, State, {sessions, NewSessions}),
+   NewState.
 
 term_to_list(Term) ->
    lists:flatten(io_lib:format("~p", [Term])).

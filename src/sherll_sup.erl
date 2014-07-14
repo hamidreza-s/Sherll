@@ -24,7 +24,7 @@ start_link() ->
 init([]) ->
    Children = [
       ?CHILD(sherll_ws_dispatcher, worker),
-      ?CHILD(sherll_actor_shell_dev, worker)
+      ?CHILD(sherll_actor_shell, worker)
    ],
    {ok, { {one_for_one, 5, 10}, Children} }.
 
