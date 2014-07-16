@@ -111,7 +111,7 @@ session_eval(SesBnd, TupleMsg) ->
       case erl_parse:parse_exprs(Tokens) of
          {ok, Exprs} ->
             {value, Result, NewBinding} = erl_eval:exprs(Exprs, Binding),
-            Response = term_to_list(Result),
+            Response = Result,
             {Response, NewBinding};
          {error, ErrInfo} ->
             {_Line, _Module, Description} = ErrInfo,
@@ -135,11 +135,11 @@ update_state({WsPid, ClientName}, SesPid, SesBnd, State) ->
    NewState = lists:keystore(sessions, 1, State, {sessions, NewSessions}),
    NewState.
 
-term_to_list(Term) ->
-   lists:flatten(io_lib:format("~p", [Term])).
-
 format_err_description([String, Argument]) ->
    lists:flatten(io_lib:format("~s~s", [String, Argument])).
+
+term_to_list(Term) ->
+ lists:flatten(io_lib:format("~p", [Term])).
 
 this() ->
    #actor_list{
